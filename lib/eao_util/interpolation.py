@@ -18,6 +18,8 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from itertools import count, izip
+
 
 def compress_list(values, tolerance=0.001):
     """
@@ -32,14 +34,15 @@ def compress_list(values, tolerance=0.001):
     the lookup tables used by other programs, this is not too problematic.
     """
 
-    # Make copy of list for modification.
-    trimmed = list(values)
+    trimmed = values
 
     while True:
-        # Counter of how many points we removed this iteration.
-        n = 0
+        # Points we wish to remove this iteration.
+        i_remove = set()
 
-        for i in range(len(trimmed) - 2, 0, -1):
+        i = 1
+        i_end = len(trimmed) - 1
+        while i < i_end:
             (before_f, before_d) = trimmed[i - 1]
             (after_f, after_d) = trimmed[i + 1]
 
@@ -57,11 +60,20 @@ def compress_list(values, tolerance=0.001):
                     break
 
             else:
-                del trimmed[i]
-                n += 1
+                i_remove.add(i)
+                # Skip an extra element so that we don't think we can
+                # interpolate from this element when considering the next.
+                i += 1
+
+            i += 1
 
         # Stop if we didn't find any points to remove.
-        if not n:
+        if not i_remove:
             break
+
+        trimmed = [
+            p for (p, i) in izip(trimmed, count(0))
+            if i not in i_remove
+        ]
 
     return trimmed
