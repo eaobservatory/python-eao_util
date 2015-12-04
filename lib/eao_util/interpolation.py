@@ -30,7 +30,7 @@ def compress_list(values, tolerance=0.001):
     interpolation between enclosing remaining points would recover the
     input values within the given (absolute) tolerance.
 
-    This function is very slow, but since it is used infrequently to generate
+    This function is fairly slow, but since it is used infrequently to generate
     the lookup tables used by other programs, this is not too problematic.
     """
 
@@ -42,13 +42,24 @@ def compress_list(values, tolerance=0.001):
 
         i = 1
         i_end = len(trimmed) - 1
+        j = 0
+        j_end = len(values)
         while i < i_end:
             (before_f, before_d) = trimmed[i - 1]
             (after_f, after_d) = trimmed[i + 1]
 
-            for (value_f, value_d) in values:
-                if not (before_f < value_f < after_f):
+            # Iterate over original values to check for differences over the
+            # tolerance, but maintain position counter "j" since we are looping
+            # over "trimmed" which is ordered like "values".
+            exceed = False
+            while j < j_end:
+                (value_f, value_d) = values[j]
+                j += 1
+
+                if not (before_f < value_f):
                     continue
+                if not (value_f < after_f):
+                    break
 
                 interp = (
                     before_d +
@@ -57,9 +68,10 @@ def compress_list(values, tolerance=0.001):
                      (after_f - before_f)))
 
                 if abs(interp - value_d) > tolerance:
+                    exceed = True
                     break
 
-            else:
+            if not exceed:
                 i_remove.add(i)
                 # Skip an extra element so that we don't think we can
                 # interpolate from this element when considering the next.
