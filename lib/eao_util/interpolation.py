@@ -18,7 +18,11 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from itertools import count, izip
+from itertools import count
+try:
+    from itertools import izip as zip
+except ImportError:
+    pass
 
 
 def compress_list(values, tolerance=0.001):
@@ -84,7 +88,7 @@ def compress_list(values, tolerance=0.001):
             break
 
         trimmed = [
-            p for (p, i) in izip(trimmed, count(0))
+            p for (p, i) in zip(trimmed, count(0))
             if i not in i_remove
         ]
 
